@@ -79,6 +79,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     private var mStoredHighlightWeekends = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        //TODO: implement webfeed sync
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         appLaunched(BuildConfig.APPLICATION_ID)
@@ -124,6 +125,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     }
 
     override fun onResume() {
+        //implement webfeed sync
         super.onResume()
         if (mStoredTextColor != config.textColor || mStoredBackgroundColor != config.backgroundColor || mStoredAdjustedPrimaryColor != getAdjustedPrimaryColor()
             || mStoredDayCode != Formatter.getTodayCode() || mStoredDimPastEvents != config.dimPastEvents || mStoredHighlightWeekends != config.highlightWeekends) {
@@ -208,6 +210,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             R.id.export_events -> tryExportEvents()
             R.id.settings -> launchSettings()
             R.id.about -> launchAbout()
+            R.id.webfeed_settings -> launchWebFeedSettings()
             android.R.id.home -> onBackPressed()
             else -> return super.onOptionsItemSelected(item)
         }
@@ -934,6 +937,10 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
 
     private fun launchSettings() {
         startActivity(Intent(applicationContext, SettingsActivity::class.java))
+    }
+
+    private fun launchWebFeedSettings(){
+        startActivity(Intent(applicationContext, WebFeedActivity::class.java))
     }
 
     private fun launchAbout() {

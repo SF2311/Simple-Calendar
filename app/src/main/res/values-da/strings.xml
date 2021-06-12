@@ -297,6 +297,13 @@
         <b>Reddit:</b>
         https://www.reddit.com/r/SimpleMobileTools
     </string>
+    <string name="webfeed_settings">Webfeed Settings</string>
+    <string name="subscribe_webfeed_label">Subscribe to Calendar Webfeed</string>
+    <string name="enter_feed_url">Enter Feed URL</string>
+    <string name="enter_valid_url">Please enter a valid URL</string>
+    <string name="sync_webfeed">Refresh regularly</string>
+    <string name="feed_url">Feed URL</string>
+    <string name="webfeed_choose_event_type">Choose a name for your events</string>
 
     <!--
         Haven't found some strings? There's more at
