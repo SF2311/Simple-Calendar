@@ -11,6 +11,9 @@ interface WebCalendarFeedDao {
     @Query("SELECT * FROM web_feeds WHERE feedId = :id")
     fun getById(id : Long) : WebCalendarFeed
 
+    @Query("SELECT * FROM web_feeds WHERE name = :feedName")
+    fun getByName(feedName: String) : List<WebCalendarFeed>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertOrUpdate(feed : WebCalendarFeed) : Long
 

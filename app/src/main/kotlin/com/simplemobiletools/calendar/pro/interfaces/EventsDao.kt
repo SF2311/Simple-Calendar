@@ -113,4 +113,10 @@ interface EventsDao {
 
     @Query("DELETE FROM events WHERE source = :source AND import_id = :importId")
     fun deleteBirthdayAnniversary(source: String, importId: String): Int
+
+    @Query("SELECT * FROM events WHERE feed_id = :feedId")
+    fun getEventsWithFeedId(feedId: Long) : List<Event>
+
+    @Query("DELETE FROM events WHERE feed_id = :feedId")
+    fun deleteEventsWithFeedId(feedId: Long)
 }

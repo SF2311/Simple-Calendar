@@ -36,6 +36,7 @@ import com.simplemobiletools.calendar.pro.jobs.CalDAVUpdateListener
 import com.simplemobiletools.calendar.pro.models.Event
 import com.simplemobiletools.calendar.pro.models.EventType
 import com.simplemobiletools.calendar.pro.models.ListEvent
+import com.simplemobiletools.calendar.pro.objects.WebFeedSynchronizer
 import com.simplemobiletools.commons.dialogs.ConfirmationDialog
 import com.simplemobiletools.commons.dialogs.FilePickerDialog
 import com.simplemobiletools.commons.dialogs.RadioGroupDialog
@@ -53,6 +54,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.ArrayList
 
 class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
@@ -78,8 +80,9 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     private var mStoredDimPastEvents = true
     private var mStoredHighlightWeekends = false
 
+    private var isSyncingFeeds = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        //TODO: implement webfeed sync
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         appLaunched(BuildConfig.APPLICATION_ID)
@@ -88,7 +91,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         calendar_fab.beVisibleIf(config.storedView != YEARLY_VIEW && config.storedView != WEEKLY_VIEW)
         calendar_fab.setOnClickListener {
             val lastFragment = currentFragments.last()
-            val allowChangingDay = lastFragment !is DayFragmentsHolder && lastFragment !is MonthDayFragmentsHolder
+            val allowChangingDay =
+                lastFragment !is DayFragmentsHolder && lastFragment !is MonthDayFragmentsHolder
             launchNewEventIntent(lastFragment.getNewEventDayCode(), allowChangingDay)
         }
 
@@ -100,6 +104,12 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
 
         if (config.caldavSync) {
             refreshCalDAVCalendars(false)
+        }
+        if (!isSyncingFeeds) {
+            isSyncingFeeds = true
+            WebFeedSynchronizer.synchronizeWebFeeds(this, false) {
+                isSyncingFeeds = false
+            }
         }
 
         swipe_refresh_layout.setOnRefreshListener {
@@ -125,10 +135,17 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     }
 
     override fun onResume() {
-        //implement webfeed sync
         super.onResume()
+
+        if (!isSyncingFeeds) {
+            isSyncingFeeds = true
+            WebFeedSynchronizer.synchronizeWebFeeds(this, false) {
+                isSyncingFeeds = false
+            }
+        }
         if (mStoredTextColor != config.textColor || mStoredBackgroundColor != config.backgroundColor || mStoredAdjustedPrimaryColor != getAdjustedPrimaryColor()
-            || mStoredDayCode != Formatter.getTodayCode() || mStoredDimPastEvents != config.dimPastEvents || mStoredHighlightWeekends != config.highlightWeekends) {
+            || mStoredDayCode != Formatter.getTodayCode() || mStoredDimPastEvents != config.dimPastEvents || mStoredHighlightWeekends != config.highlightWeekends
+        ) {
             updateViewPager()
         }
 
@@ -275,24 +292,26 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             })
         }
 
-        MenuItemCompat.setOnActionExpandListener(mSearchMenuItem, object : MenuItemCompat.OnActionExpandListener {
-            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-                mIsSearchOpen = true
-                search_holder.beVisible()
-                calendar_fab.beGone()
-                searchQueryChanged("")
-                invalidateOptionsMenu()
-                return true
-            }
+        MenuItemCompat.setOnActionExpandListener(
+            mSearchMenuItem,
+            object : MenuItemCompat.OnActionExpandListener {
+                override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                    mIsSearchOpen = true
+                    search_holder.beVisible()
+                    calendar_fab.beGone()
+                    searchQueryChanged("")
+                    invalidateOptionsMenu()
+                    return true
+                }
 
-            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                mIsSearchOpen = false
-                search_holder.beGone()
-                calendar_fab.beVisibleIf(currentFragments.last() !is YearFragmentsHolder && currentFragments.last() !is WeekFragmentsHolder)
-                invalidateOptionsMenu()
-                return true
-            }
-        })
+                override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                    mIsSearchOpen = false
+                    search_holder.beGone()
+                    calendar_fab.beVisibleIf(currentFragments.last() !is YearFragmentsHolder && currentFragments.last() !is WeekFragmentsHolder)
+                    invalidateOptionsMenu()
+                    return true
+                }
+            })
     }
 
     private fun closeSearch() {
@@ -328,7 +347,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             val newEvent = getString(R.string.new_event)
             val manager = getSystemService(ShortcutManager::class.java)
             val drawable = resources.getDrawable(R.drawable.shortcut_plus)
-            (drawable as LayerDrawable).findDrawableByLayerId(R.id.shortcut_plus_background).applyColorFilter(appIconColor)
+            (drawable as LayerDrawable).findDrawableByLayerId(R.id.shortcut_plus_background)
+                .applyColorFilter(appIconColor)
             val bmp = drawable.convertToBitmap()
 
             val intent = Intent(this, SplashActivity::class.java)
@@ -380,7 +400,10 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     private fun checkIsViewIntent() {
         if (intent?.action == Intent.ACTION_VIEW && intent.data != null) {
             val uri = intent.data
-            if (uri?.authority?.equals("com.android.calendar") == true || uri?.authority?.substringAfter("@") == "com.android.calendar") {
+            if (uri?.authority?.equals("com.android.calendar") == true || uri?.authority?.substringAfter(
+                    "@"
+                ) == "com.android.calendar"
+            ) {
                 if (uri.path!!.startsWith("/events")) {
                     ensureBackgroundThread {
                         // intents like content://com.android.calendar/events/1756
@@ -395,7 +418,11 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                             toast(R.string.caldav_event_not_found, Toast.LENGTH_LONG)
                         }
                     }
-                } else if (uri.path!!.startsWith("/time") || intent?.extras?.getBoolean("DETAIL_VIEW", false) == true) {
+                } else if (uri.path!!.startsWith("/time") || intent?.extras?.getBoolean(
+                        "DETAIL_VIEW",
+                        false
+                    ) == true
+                ) {
                     // clicking date on a third party widget: content://com.android.calendar/time/1507309245683
                     // or content://0@com.android.calendar/time/1584958526435
                     val timestamp = uri.pathSegments.last()
@@ -417,7 +444,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             RadioItem(MONTHLY_VIEW, getString(R.string.monthly_view)),
             RadioItem(MONTHLY_DAILY_VIEW, getString(R.string.monthly_daily_view)),
             RadioItem(YEARLY_VIEW, getString(R.string.yearly_view)),
-            RadioItem(EVENTS_LIST_VIEW, getString(R.string.simple_event_list)))
+            RadioItem(EVENTS_LIST_VIEW, getString(R.string.simple_event_list))
+        )
 
         RadioGroupDialog(this, items, config.storedView) {
             resetActionBarTitle()
@@ -490,7 +518,11 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                 val holidays = getString(R.string.holidays)
                 var eventTypeId = eventsHelper.getEventTypeIdWithTitle(holidays)
                 if (eventTypeId == -1L) {
-                    val eventType = EventType(null, holidays, resources.getColor(R.color.default_holidays_color))
+                    val eventType = EventType(
+                        null,
+                        holidays,
+                        resources.getColor(R.color.default_holidays_color)
+                    )
                     eventTypeId = eventsHelper.insertOrUpdateEventTypeSync(eventType)
                 }
 
@@ -513,8 +545,13 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                     val privateCursor = getMyContactsCursor(false, false)?.loadInBackground()
 
                     ensureBackgroundThread {
-                        val privateContacts = MyContactsContentProvider.getSimpleContacts(this, privateCursor)
-                        addPrivateEvents(true, privateContacts, reminders) { eventsFound, eventsAdded ->
+                        val privateContacts =
+                            MyContactsContentProvider.getSimpleContacts(this, privateCursor)
+                        addPrivateEvents(
+                            true,
+                            privateContacts,
+                            reminders
+                        ) { eventsFound, eventsAdded ->
                             addContactEvents(true, reminders, eventsFound, eventsAdded) {
                                 when {
                                     it > 0 -> {
@@ -542,8 +579,13 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                     val privateCursor = getMyContactsCursor(false, false)?.loadInBackground()
 
                     ensureBackgroundThread {
-                        val privateContacts = MyContactsContentProvider.getSimpleContacts(this, privateCursor)
-                        addPrivateEvents(false, privateContacts, reminders) { eventsFound, eventsAdded ->
+                        val privateContacts =
+                            MyContactsContentProvider.getSimpleContacts(this, privateCursor)
+                        addPrivateEvents(
+                            false,
+                            privateContacts,
+                            reminders
+                        ) { eventsFound, eventsAdded ->
                             addContactEvents(false, reminders, eventsFound, eventsAdded) {
                                 when {
                                     it > 0 -> {
@@ -564,25 +606,36 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     }
 
     private fun handleParseResult(result: ImportResult) {
-        toast(when (result) {
-            ImportResult.IMPORT_NOTHING_NEW -> R.string.no_new_items
-            ImportResult.IMPORT_OK -> R.string.holidays_imported_successfully
-            ImportResult.IMPORT_PARTIAL -> R.string.importing_some_holidays_failed
-            else -> R.string.importing_holidays_failed
-        }, Toast.LENGTH_LONG)
+        toast(
+            when (result) {
+                ImportResult.IMPORT_NOTHING_NEW -> R.string.no_new_items
+                ImportResult.IMPORT_OK -> R.string.holidays_imported_successfully
+                ImportResult.IMPORT_PARTIAL -> R.string.importing_some_holidays_failed
+                else -> R.string.importing_holidays_failed
+            }, Toast.LENGTH_LONG
+        )
     }
 
-    private fun addContactEvents(birthdays: Boolean, reminders: ArrayList<Int>, initEventsFound: Int, initEventsAdded: Int, callback: (Int) -> Unit) {
+    private fun addContactEvents(
+        birthdays: Boolean,
+        reminders: ArrayList<Int>,
+        initEventsFound: Int,
+        initEventsAdded: Int,
+        callback: (Int) -> Unit
+    ) {
         var eventsFound = initEventsFound
         var eventsAdded = initEventsAdded
         val uri = Data.CONTENT_URI
-        val projection = arrayOf(Contacts.DISPLAY_NAME,
+        val projection = arrayOf(
+            Contacts.DISPLAY_NAME,
             CommonDataKinds.Event.CONTACT_ID,
             CommonDataKinds.Event.CONTACT_LAST_UPDATED_TIMESTAMP,
-            CommonDataKinds.Event.START_DATE)
+            CommonDataKinds.Event.START_DATE
+        )
 
         val selection = "${Data.MIMETYPE} = ? AND ${CommonDataKinds.Event.TYPE} = ?"
-        val type = if (birthdays) CommonDataKinds.Event.TYPE_BIRTHDAY else CommonDataKinds.Event.TYPE_ANNIVERSARY
+        val type =
+            if (birthdays) CommonDataKinds.Event.TYPE_BIRTHDAY else CommonDataKinds.Event.TYPE_ANNIVERSARY
         val selectionArgs = arrayOf(CommonDataKinds.Event.CONTENT_ITEM_TYPE, type.toString())
 
         val dateFormats = getDateFormats()
@@ -592,7 +645,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             importIDs[it.importId] = it.startTS
         }
 
-        val eventTypeId = if (birthdays) getBirthdaysEventTypeId() else getAnniversariesEventTypeId()
+        val eventTypeId =
+            if (birthdays) getBirthdaysEventTypeId() else getAnniversariesEventTypeId()
         val source = if (birthdays) SOURCE_CONTACT_BIRTHDAY else SOURCE_CONTACT_ANNIVERSARY
 
         queryCursor(uri, projection, selection, selectionArgs, showErrors = true) { cursor ->
@@ -609,10 +663,25 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                     }
 
                     val timestamp = date.time / 1000L
-                    val lastUpdated = cursor.getLongValue(CommonDataKinds.Event.CONTACT_LAST_UPDATED_TIMESTAMP)
-                    val event = Event(null, timestamp, timestamp, name, reminder1Minutes = reminders[0], reminder2Minutes = reminders[1],
-                        reminder3Minutes = reminders[2], importId = contactId, timeZone = DateTimeZone.getDefault().id, flags = FLAG_ALL_DAY,
-                        repeatInterval = YEAR, repeatRule = REPEAT_SAME_DAY, eventType = eventTypeId, source = source, lastUpdated = lastUpdated)
+                    val lastUpdated =
+                        cursor.getLongValue(CommonDataKinds.Event.CONTACT_LAST_UPDATED_TIMESTAMP)
+                    val event = Event(
+                        null,
+                        timestamp,
+                        timestamp,
+                        name,
+                        reminder1Minutes = reminders[0],
+                        reminder2Minutes = reminders[1],
+                        reminder3Minutes = reminders[2],
+                        importId = contactId,
+                        timeZone = DateTimeZone.getDefault().id,
+                        flags = FLAG_ALL_DAY,
+                        repeatInterval = YEAR,
+                        repeatRule = REPEAT_SAME_DAY,
+                        eventType = eventTypeId,
+                        source = source,
+                        lastUpdated = lastUpdated
+                    )
 
                     val importIDsToDelete = ArrayList<String>()
                     for ((key, value) in importIDs) {
@@ -645,7 +714,12 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         }
     }
 
-    private fun addPrivateEvents(birthdays: Boolean, contacts: ArrayList<SimpleContact>, reminders: ArrayList<Int>, callback: (eventsFound: Int, eventsAdded: Int) -> Unit) {
+    private fun addPrivateEvents(
+        birthdays: Boolean,
+        contacts: ArrayList<SimpleContact>,
+        reminders: ArrayList<Int>,
+        callback: (eventsFound: Int, eventsAdded: Int) -> Unit
+    ) {
         var eventsAdded = 0
         var eventsFound = 0
         if (contacts.isEmpty()) {
@@ -654,10 +728,12 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         }
 
         try {
-            val eventTypeId = if (birthdays) getBirthdaysEventTypeId() else getAnniversariesEventTypeId()
+            val eventTypeId =
+                if (birthdays) getBirthdaysEventTypeId() else getAnniversariesEventTypeId()
             val source = if (birthdays) SOURCE_CONTACT_BIRTHDAY else SOURCE_CONTACT_ANNIVERSARY
 
-            val existingEvents = if (birthdays) eventsDB.getBirthdays() else eventsDB.getAnniversaries()
+            val existingEvents =
+                if (birthdays) eventsDB.getBirthdays() else eventsDB.getAnniversaries()
             val importIDs = HashMap<String, Long>()
             existingEvents.forEach {
                 importIDs[it.importId] = it.startTS
@@ -681,9 +757,23 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
 
                     val timestamp = date.time / 1000L
                     val lastUpdated = System.currentTimeMillis()
-                    val event = Event(null, timestamp, timestamp, contact.name, reminder1Minutes = reminders[0], reminder2Minutes = reminders[1],
-                        reminder3Minutes = reminders[2], importId = contact.contactId.toString(), timeZone = DateTimeZone.getDefault().id, flags = FLAG_ALL_DAY,
-                        repeatInterval = YEAR, repeatRule = REPEAT_SAME_DAY, eventType = eventTypeId, source = source, lastUpdated = lastUpdated)
+                    val event = Event(
+                        null,
+                        timestamp,
+                        timestamp,
+                        contact.name,
+                        reminder1Minutes = reminders[0],
+                        reminder2Minutes = reminders[1],
+                        reminder3Minutes = reminders[2],
+                        importId = contact.contactId.toString(),
+                        timeZone = DateTimeZone.getDefault().id,
+                        flags = FLAG_ALL_DAY,
+                        repeatInterval = YEAR,
+                        repeatRule = REPEAT_SAME_DAY,
+                        eventType = eventTypeId,
+                        source = source,
+                        lastUpdated = lastUpdated
+                    )
 
                     val importIDsToDelete = ArrayList<String>()
                     for ((key, value) in importIDs) {
@@ -718,7 +808,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         val birthdays = getString(R.string.birthdays)
         var eventTypeId = eventsHelper.getEventTypeIdWithTitle(birthdays)
         if (eventTypeId == -1L) {
-            val eventType = EventType(null, birthdays, resources.getColor(R.color.default_birthdays_color))
+            val eventType =
+                EventType(null, birthdays, resources.getColor(R.color.default_birthdays_color))
             eventTypeId = eventsHelper.insertOrUpdateEventTypeSync(eventType)
         }
         return eventTypeId
@@ -728,7 +819,11 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         val anniversaries = getString(R.string.anniversaries)
         var eventTypeId = eventsHelper.getEventTypeIdWithTitle(anniversaries)
         if (eventTypeId == -1L) {
-            val eventType = EventType(null, anniversaries, resources.getColor(R.color.default_anniversaries_color))
+            val eventType = EventType(
+                null,
+                anniversaries,
+                resources.getColor(R.color.default_anniversaries_color)
+            )
             eventTypeId = eventsHelper.insertOrUpdateEventTypeSync(eventType)
         }
         return eventTypeId
@@ -790,7 +885,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         bundle.putString(DAY_CODE, Formatter.getDayCodeFromDateTime(dateTime))
         fragment.arguments = bundle
         try {
-            supportFragmentManager.beginTransaction().add(R.id.fragments_holder, fragment).commitNow()
+            supportFragmentManager.beginTransaction().add(R.id.fragments_holder, fragment)
+                .commitNow()
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
         } catch (e: Exception) {
         }
@@ -801,7 +897,9 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
 
         // not great, not terrible
         val useHours = if (currentOffsetHours >= 10) 8 else 12
-        var thisweek = DateTime().withZone(DateTimeZone.UTC).withDayOfWeek(1).withHourOfDay(useHours).minusDays(if (config.isSundayFirst) 1 else 0)
+        var thisweek =
+            DateTime().withZone(DateTimeZone.UTC).withDayOfWeek(1).withHourOfDay(useHours)
+                .minusDays(if (config.isSundayFirst) 1 else 0)
         if (DateTime().minusDays(7).seconds() > thisweek.seconds()) {
             thisweek = thisweek.plusDays(7)
         }
@@ -925,11 +1023,13 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                 toast(R.string.no_entries_for_exporting)
             } else {
                 IcsExporter().exportEvents(this, outputStream, events, true) {
-                    toast(when (it) {
-                        ExportResult.EXPORT_OK -> R.string.exporting_successful
-                        ExportResult.EXPORT_PARTIAL -> R.string.exporting_some_entries_failed
-                        else -> R.string.exporting_failed
-                    })
+                    toast(
+                        when (it) {
+                            ExportResult.EXPORT_OK -> R.string.exporting_successful
+                            ExportResult.EXPORT_PARTIAL -> R.string.exporting_some_entries_failed
+                            else -> R.string.exporting_failed
+                        }
+                    )
                 }
             }
         }
@@ -939,7 +1039,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         startActivity(Intent(applicationContext, SettingsActivity::class.java))
     }
 
-    private fun launchWebFeedSettings(){
+    private fun launchWebFeedSettings() {
         startActivity(Intent(applicationContext, WebFeedActivity::class.java))
     }
 
@@ -955,7 +1055,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             FAQItem(R.string.faq_4_title, R.string.faq_4_text),
             FAQItem(R.string.faq_2_title_commons, R.string.faq_2_text_commons),
             FAQItem(R.string.faq_6_title_commons, R.string.faq_6_text_commons),
-            FAQItem(R.string.faq_7_title_commons, R.string.faq_7_text_commons))
+            FAQItem(R.string.faq_7_title_commons, R.string.faq_7_text_commons)
+        )
 
         startAboutActivity(R.string.app_name, licenses, BuildConfig.VERSION_NAME, faqItems, true)
     }
@@ -969,14 +1070,15 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                     search_results_list.beVisibleIf(events.isNotEmpty())
                     search_placeholder.beVisibleIf(events.isEmpty())
                     val listItems = getEventListItems(events)
-                    val eventsAdapter = EventListAdapter(this, listItems, true, this, search_results_list) {
-                        if (it is ListEvent) {
-                            Intent(applicationContext, EventActivity::class.java).apply {
-                                putExtra(EVENT_ID, it.id)
-                                startActivity(this)
+                    val eventsAdapter =
+                        EventListAdapter(this, listItems, true, this, search_results_list) {
+                            if (it is ListEvent) {
+                                Intent(applicationContext, EventActivity::class.java).apply {
+                                    putExtra(EVENT_ID, it.id)
+                                    startActivity(this)
+                                }
                             }
                         }
-                    }
 
                     search_results_list.adapter = eventsAdapter
                 }
@@ -988,7 +1090,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     }
 
     private fun checkSwipeRefreshAvailability() {
-        swipe_refresh_layout.isEnabled = config.caldavSync && config.pullToRefresh && config.storedView != WEEKLY_VIEW
+        swipe_refresh_layout.isEnabled =
+            config.caldavSync && config.pullToRefresh && config.storedView != WEEKLY_VIEW
         if (!swipe_refresh_layout.isEnabled) {
             swipe_refresh_layout.isRefreshing = false
         }

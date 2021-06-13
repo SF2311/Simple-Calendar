@@ -307,6 +307,10 @@
     <string name="sync_webfeed">Refresh regularly</string>
     <string name="feed_url">Feed URL</string>
     <string name="webfeed_choose_event_type">Choose a name for your events</string>
+    <string name="edit_webfeeds">Edit Calendar Feeds</string>
+    <string name="feed_name">Feed Name</string>
+    <string name="new_webfeed">New Feed</string>
+    <string name="enter_unique_feed_name">A Feed with this name exists already</string>
 
 
     <!--
