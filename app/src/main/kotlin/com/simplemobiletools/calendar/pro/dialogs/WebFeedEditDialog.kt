@@ -10,11 +10,9 @@ import com.simplemobiletools.calendar.pro.extensions.config
 import com.simplemobiletools.calendar.pro.extensions.eventTypesDB
 import com.simplemobiletools.calendar.pro.extensions.webCalendarFeedDB
 import com.simplemobiletools.calendar.pro.helpers.REGULAR_EVENT_TYPE_ID
-import com.simplemobiletools.calendar.pro.models.Event
 import com.simplemobiletools.calendar.pro.models.EventType
 import com.simplemobiletools.calendar.pro.models.WebCalendarFeed
 import com.simplemobiletools.commons.extensions.getCornerRadius
-import com.simplemobiletools.commons.extensions.hideKeyboard
 import com.simplemobiletools.commons.extensions.setFillWithStroke
 import com.simplemobiletools.commons.extensions.setupDialogStuff
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
@@ -36,7 +34,7 @@ class WebFeedEditDialog(val activity: SimpleActivity, val webFeed : WebCalendarF
                 if(createNewFeed) EventType(null, "", activity.config.primaryColor)
                 else activity.eventTypesDB.getEventTypeWithId(
                     if(!webFeed!!.overrideFileEventTypes) REGULAR_EVENT_TYPE_ID
-                    else webFeed!!.eventTypeId
+                    else webFeed.eventTypeId
                 )!!
             activity.runOnUiThread {
                 initDialog()
@@ -45,7 +43,6 @@ class WebFeedEditDialog(val activity: SimpleActivity, val webFeed : WebCalendarF
     }
 
     private fun initDialog() {
-
         val view =
             (activity.layoutInflater.inflate(R.layout.dialog_web_feed_edit, null) as ViewGroup).apply{
                 updateEventType(this, eventType)
@@ -54,12 +51,15 @@ class WebFeedEditDialog(val activity: SimpleActivity, val webFeed : WebCalendarF
                         webfeed_checkbox_override.isChecked = true
                         webfeed_event_selector_wrapper.visibility = View.VISIBLE
                     }
+                    if(webFeed.keepPast){
+                        webfeed_checkbox_keep_events.isChecked = true
+                    }
                     webfeed_name.setText(webFeed!!.feedName)
                     webfeed_url.setText(webFeed!!.feedUrl)
                     webfeed_checkbox_synchronize.isChecked = webFeed.syncronizeFeed
                 }
                 webfeed_type_holder.setOnClickListener {
-                    SelectEventTypeDialog(activity, eventType.id!!, true, true, false, true) {
+                    SelectEventTypeDialog(activity, eventType.id ?: REGULAR_EVENT_TYPE_ID, true, true, false, true) {
                         eventType = it
                         config.lastUsedLocalEventTypeId = it.id!!
                         config.lastUsedCaldavCalendarId = it.caldavCalendarId
@@ -67,20 +67,21 @@ class WebFeedEditDialog(val activity: SimpleActivity, val webFeed : WebCalendarF
                         updateEventType(this, eventType)
                     }
                 }
+                webfeed_checkbox_override.setOnClickListener {
+                    var checkBox = it as MyAppCompatCheckbox
+                    if(checkBox.isChecked){
+                        updateEventType(this,eventType)
+                        webfeed_event_selector_wrapper.visibility = View.VISIBLE
+                    }else{
+                        webfeed_event_selector_wrapper.visibility = View.GONE
+                    }
+                }
             }
         AlertDialog.Builder(activity)
             .setPositiveButton(R.string.ok, null)
             .setNegativeButton(R.string.cancel, null)
             .create().apply {
-                activity.setupDialogStuff(view, this, R.string.enter_feed_url) {
-                    webfeed_checkbox_override.setOnClickListener {
-                        var checkBox = it as MyAppCompatCheckbox
-                        if(checkBox.isChecked()){
-                            webfeed_event_selector_wrapper.visibility = View.VISIBLE
-                        }else{
-                            webfeed_event_selector_wrapper.visibility = View.INVISIBLE
-                        }
-                    }
+                activity.setupDialogStuff(view, this, R.string.create_feed) {
                     getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                         if(eventType.id == null){
                             if(!webfeed_checkbox_override.isChecked){
@@ -110,7 +111,6 @@ class WebFeedEditDialog(val activity: SimpleActivity, val webFeed : WebCalendarF
                                     webfeed_error.visibility = View.VISIBLE
                                 }
                             }else {
-
                                 val webFeed = WebCalendarFeed(
                                     webFeed?.feedId,
                                     webfeed_url.text.toString(),
@@ -119,7 +119,8 @@ class WebFeedEditDialog(val activity: SimpleActivity, val webFeed : WebCalendarF
                                     eventType.id!!,
                                     eventType.caldavCalendarId,
                                     webfeed_checkbox_override.isChecked,
-                                    DateTime.now().millis
+                                    DateTime.now().millis,
+                                    webfeed_checkbox_keep_events.isChecked
                                 )
                                 ensureBackgroundThread {
                                     webFeed.feedId =

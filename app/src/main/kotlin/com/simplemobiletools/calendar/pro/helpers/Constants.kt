@@ -76,6 +76,7 @@ const val DEFAULT_START_TIME = "default_start_time"
 const val DEFAULT_DURATION = "default_duration"
 const val DEFAULT_EVENT_TYPE_ID = "default_event_type_id"
 const val ALLOW_CHANGING_TIME_ZONES = "allow_changing_time_zones"
+const val ALLOW_MOBILE_DOWNLOADS = "allow_mobile_downloads"
 const val LAST_EXPORT_PATH = "last_export_path"
 const val EXPORT_PAST_EVENTS = "export_past_events"
 const val WEEKLY_VIEW_ITEM_HEIGHT_MULTIPLIER = "weekly_view_item_height_multiplier"
@@ -154,6 +155,7 @@ const val SOURCE_SIMPLE_CALENDAR = "simple-calendar"
 const val SOURCE_IMPORTED_ICS = "imported-ics"
 const val SOURCE_CONTACT_BIRTHDAY = "contact-birthday"
 const val SOURCE_CONTACT_ANNIVERSARY = "contact-anniversary"
+const val SOURCE_WEBFEED = "webfeed"
 
 const val DELETE_SELECTED_OCCURRENCE = 0
 const val DELETE_FUTURE_OCCURRENCES = 1

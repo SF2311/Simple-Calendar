@@ -89,8 +89,7 @@ abstract class EventsDatabase : RoomDatabase() {
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.apply {
-                    execSQL("CREATE TABLE IF NOT EXISTS web_feeds (feedId INTEGER PRIMARY KEY, url TEXT NOT NULL, name TEXT NOT NULL, sync INTEGER NOT NULL DEFAULT 1 , event_type INTEGER NOT NULL DEFAULT -1, cal_id INTEGER NOT NULL DEFAULT 0, override_event_types INTEGER NOT NULL, last_sync INTEGER NOT NULL)")
-                    execSQL("ALTER TABLE events ADD COLUMN feed_id INTEGER NOT NULL DEFAULT -1")
+                    execSQL("CREATE TABLE IF NOT EXISTS web_feeds (feedId INTEGER PRIMARY KEY, url TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', sync INTEGER NOT NULL DEFAULT 1 , event_type INTEGER NOT NULL DEFAULT -1, cal_id INTEGER NOT NULL DEFAULT 0, override_event_types INTEGER NOT NULL DEFAULT 0, last_sync INTEGER NOT NULL DEFAULT 0, keep INTEGER NOT NULL DEFAULT 0)")
                     execSQL("CREATE UNIQUE INDEX index_web_feeds_feedId ON web_feeds(feedId)")
                 }
             }

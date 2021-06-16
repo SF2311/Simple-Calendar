@@ -301,16 +301,24 @@
         <b>Reddit:</b>
         https://www.reddit.com/r/SimpleMobileTools
     </string>
-    <string name="webfeed_settings">Webfeed Settings</string>
-    <string name="subscribe_webfeed_label">Subscribe to Calendar Webfeed</string>
-    <string name="enter_feed_url">Enter Feed URL</string>
-    <string name="enter_valid_url">Please enter a valid URL</string>
-    <string name="sync_webfeed">Refresh regularly</string>
+    <string name="webfeed_settings">Kalenderfeeds konfigurieren</string>
+    <string name="subscribe_webfeed_label">Kalenderfeed abonnieren</string>
+    <string name="enter_valid_url">Bitte eine valide URL eintragen</string>
+    <string name="sync_webfeed">Regelmäßig aktualisieren</string>
     <string name="feed_url">Feed URL</string>
-    <string name="webfeed_choose_event_type">Choose a name for your events</string>
-    <string name="edit_webfeeds">Edit Calendar Feeds</string>
-    <string name="feed_name">Feed Name</string>
-    <string name="new_webfeed">New Feed</string>
+    <string name="webfeed_choose_event_type">Namen der Termine wählen</string>
+    <string name="edit_webfeeds">Kalederfeeds bearbeiten</string>
+    <string name="feed_name">Name des Feeds</string>
+    <string name="new_webfeed">Feed hinzufügen</string>
+    <string name="sync_webfeeds">Feeds synchronisieren</string>
+    <string name="keep_old_events">Vergangene Termine nicht löschen, nachdem diese aus dem Feed verschwunden sind</string>
+    <string name="delete_feed_success">Feed erfolgreich gelöscht</string>
+    <string name="webfeed">Kalenderfeed</string>
+    <string name="no_webfeeds_found">Keine Feeds vorhanden</string>
+    <string name="allow_mobile_download">Download über mobile Verbindung erlauben</string>
+    <string name="mobile_download_not_allowed">Mobiler Download ist untersagt</string>
+    <string name="enter_unique_feed_name">Es existiert bereits ein Feed mit diesem Namen</string>
+    <string name="create_feed">Neuer Feed</string>
 
     <!--
         Haven't found some strings? There's more at

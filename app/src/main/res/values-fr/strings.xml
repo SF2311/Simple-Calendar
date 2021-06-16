@@ -300,16 +300,24 @@
         <b>Reddit :</b>
         https://www.reddit.com/r/SimpleMobileTools
     </string>
-    <string name="webfeed_settings">Webfeed Settings</string>
-    <string name="subscribe_webfeed_label">Subscribe to Calendar Webfeed</string>
-    <string name="enter_feed_url">Enter Feed URL</string>
-    <string name="enter_valid_url">Please enter a valid URL</string>
-    <string name="sync_webfeed">Refresh regularly</string>
-    <string name="feed_url">Feed URL</string>
-    <string name="webfeed_choose_event_type">Choose a name for your events</string>
-    <string name="edit_webfeeds">Edit Calendar Feeds</string>
-    <string name="feed_name">Feed Name</string>
-    <string name="new_webfeed">New Feed</string>
+    <string name="webfeed_settings">Paramètres flux du calendrier</string>
+    <string name="subscribe_webfeed_label">S\'abonner à un flux de calendrier</string>
+    <string name="create_feed">S\'abonner</string>
+    <string name="sync_webfeed">Mettre à jour régulièrement</string>
+    <string name="feed_url">URL du flux</string>
+    <string name="webfeed_choose_event_type">Sélectionnez le nom des événements</string>
+    <string name="feed_name">Nom du flux</string>
+    <string name="new_webfeed">Ajouter un flux</string>
+    <string name="sync_webfeeds">Mettre à jour les flux</string>
+    <string name="keep_old_events">Ne supprimez pas les événements passés après qu\'ils aient disparu du flux</string>
+    <string name="delete_feed_success">Flux effacé avec succès</string>
+    <string name="allow_mobile_download">Autoriser le téléchargement via une connexion mobile</string>
+    <string name="mobile_download_not_allowed">Le téléchargement mobile est interdit</string>
+    <string name="enter_valid_url">Veuillez entrer une URL valide</string>
+    <string name="edit_webfeeds">Modifier les flux</string>
+    <string name="enter_unique_feed_name">Un flux partant ce nom existe déjà</string>
+    <string name="webfeed">Flux de calendrier</string>
+    <string name="no_webfeeds_found">Aucun flux disponible</string>
 
     <!--
         Haven't found some strings? There's more at

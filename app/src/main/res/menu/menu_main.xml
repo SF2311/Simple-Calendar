@@ -28,9 +28,6 @@
         android:title="@string/refresh_caldav_calendars"
         app:showAsAction="ifRoom"/>
     <item
-        android:id="@+id/webfeed_settings"
-        android:title="@string/webfeed_settings" />
-    <item
         android:id="@+id/go_to_date"
         android:title="@string/go_to_date"
         app:showAsAction="never"/>
@@ -50,6 +47,9 @@
         android:id="@+id/add_anniversaries"
         android:title="@string/add_anniversaries"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/webfeed_settings"
+        android:title="@string/webfeed_settings" />
     <item
         android:id="@+id/import_events"
         android:title="@string/import_events_from_ics"

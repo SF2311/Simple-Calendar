@@ -7,6 +7,7 @@ import androidx.room.Query
 import com.simplemobiletools.calendar.pro.helpers.REGULAR_EVENT_TYPE_ID
 import com.simplemobiletools.calendar.pro.helpers.SOURCE_CONTACT_ANNIVERSARY
 import com.simplemobiletools.calendar.pro.helpers.SOURCE_CONTACT_BIRTHDAY
+import com.simplemobiletools.calendar.pro.helpers.SOURCE_WEBFEED
 import com.simplemobiletools.calendar.pro.models.Event
 
 @Dao
@@ -19,6 +20,9 @@ interface EventsDao {
 
     @Query("SELECT * FROM events WHERE id = :id")
     fun getEventWithId(id: Long): Event?
+
+    @Query("SELECT * FROM events WHERE source = '$SOURCE_WEBFEED'||'-'||:feedId")
+    fun getEventsOfFeed(feedId : Long) : List<Event>
 
     @Query("SELECT * FROM events WHERE import_id = :importId")
     fun getEventWithImportId(importId: String): Event?
@@ -114,9 +118,6 @@ interface EventsDao {
     @Query("DELETE FROM events WHERE source = :source AND import_id = :importId")
     fun deleteBirthdayAnniversary(source: String, importId: String): Int
 
-    @Query("SELECT * FROM events WHERE feed_id = :feedId")
-    fun getEventsWithFeedId(feedId: Long) : List<Event>
-
-    @Query("DELETE FROM events WHERE feed_id = :feedId")
-    fun deleteEventsWithFeedId(feedId: Long)
+    @Query("DELETE FROM events WHERE source = '$SOURCE_WEBFEED'||'-'||:feedId")
+    fun deleteEventsOfFeed(feedId: Long)
 }

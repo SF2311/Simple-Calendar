@@ -48,7 +48,8 @@ class IcsImporter(val activity: SimpleActivity) {
     private var eventsFailed = 0
     private var eventsAlreadyExist = 0
 
-    fun importEvents(path: String, defaultEventTypeId: Long, calDAVCalendarId: Int, overrideFileEventTypes: Boolean, feedId : Long = -1L): ImportResult {
+    fun importEvents(path: String, defaultEventTypeId: Long, calDAVCalendarId: Int, overrideFileEventTypes: Boolean, feedId : Long = -1L, callback : (ArrayList<Event>) -> Unit = {}): ImportResult {
+        val parsedEvents = ArrayList<Event>()
         try {
             val eventTypes = eventsHelper.getEventTypesSync()
             val existingEvents = activity.eventsDB.getEventsWithImportIds().toMutableList() as ArrayList<Event>
@@ -173,6 +174,7 @@ class IcsImporter(val activity: SimpleActivity) {
                         // repeating event exceptions can have the same import id as their parents, so pick the latest event to update
                         val eventToUpdate = existingEvents.filter { curImportId.isNotEmpty() && curImportId == it.importId }.sortedByDescending { it.lastUpdated }.firstOrNull()
                         if (eventToUpdate != null && eventToUpdate.lastUpdated >= curLastModified) {
+                            parsedEvents.add(eventToUpdate)
                             eventsAlreadyExist++
                             line = curLine
                             continue
@@ -187,10 +189,10 @@ class IcsImporter(val activity: SimpleActivity) {
                         reminders = reminders.sortedBy { it.minutes }.sortedBy { it.minutes == REMINDER_OFF }.toMutableList() as ArrayList<Reminder>
 
                         val eventType = eventTypes.firstOrNull { it.id == curEventTypeId }
-                        val source = if (calDAVCalendarId == 0 || eventType?.isSyncedEventType() == false) SOURCE_IMPORTED_ICS else "$CALDAV-$calDAVCalendarId"
+                        val source = if (calDAVCalendarId == 0 || eventType?.isSyncedEventType() == false) (if(feedId == -1L)SOURCE_IMPORTED_ICS else "$SOURCE_WEBFEED-$feedId") else "$CALDAV-$calDAVCalendarId"
                         val event = Event(null, curStart, curEnd, curTitle, curLocation, curDescription, reminders[0].minutes,
                             reminders[1].minutes, reminders[2].minutes, reminders[0].type, reminders[1].type, reminders[2].type, curRepeatInterval, curRepeatRule,
-                            curRepeatLimit, curRepeatExceptions, "", curImportId, DateTimeZone.getDefault().id, curFlags, curEventTypeId, 0, curLastModified, source,feedId)
+                            curRepeatLimit, curRepeatExceptions, "", curImportId, DateTimeZone.getDefault().id, curFlags, curEventTypeId, 0, curLastModified, source)
 
                         if (event.getIsAllDay() && curEnd > curStart) {
                             event.endTS -= DAY
@@ -199,6 +201,7 @@ class IcsImporter(val activity: SimpleActivity) {
                         if (event.importId.isEmpty()) {
                             event.importId = event.hashCode().toString()
                             if (existingEvents.map { it.importId }.contains(event.importId)) {
+                                parsedEvents.add(event)
                                 eventsAlreadyExist++
                                 line = curLine
                                 continue
@@ -210,13 +213,14 @@ class IcsImporter(val activity: SimpleActivity) {
                             if (isSequence) {
                                 if (curRecurrenceDayCode.isEmpty()) {
                                     eventsHelper.insertEvent(event, true, false)
+                                    parsedEvents.add(event)
                                 } else {
                                     // if an event contains the RECURRENCE-ID field, it is an exception to a recurring event, so update its parent too
                                     val parentEvent = activity.eventsDB.getEventWithImportId(event.importId)
                                     if (parentEvent != null && !parentEvent.repetitionExceptions.contains(curRecurrenceDayCode)) {
                                         parentEvent.addRepetitionException(curRecurrenceDayCode)
                                         eventsHelper.insertEvent(parentEvent, true, false)
-
+                                        parsedEvents.add(parentEvent)
                                         event.parentId = parentEvent.id!!
                                         eventsToInsert.add(event)
                                     }
@@ -227,6 +231,7 @@ class IcsImporter(val activity: SimpleActivity) {
                         } else {
                             event.id = eventToUpdate.id
                             eventsHelper.updateEvent(event, true, false)
+                            parsedEvents.add(event)
                         }
                         eventsImported++
                         resetValues()
@@ -236,11 +241,13 @@ class IcsImporter(val activity: SimpleActivity) {
             }
 
             eventsHelper.insertEvents(eventsToInsert, true)
+            eventsToInsert.forEach {parsedEvents.add(it)}
         } catch (e: Exception) {
             activity.showErrorToast(e)
             eventsFailed++
         }
 
+        callback(parsedEvents)
         return when {
             eventsImported == 0 -> {
                 if (eventsAlreadyExist > 0) {

@@ -11,7 +11,6 @@ import com.simplemobiletools.commons.extensions.addBitIf
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.io.Serializable
-
 @Entity(tableName = "events", indices = [(Index(value = ["id"], unique = true))])
 data class Event(
     @PrimaryKey(autoGenerate = true) var id: Long?,
@@ -37,8 +36,7 @@ data class Event(
     @ColumnInfo(name = "event_type") var eventType: Long = REGULAR_EVENT_TYPE_ID,
     @ColumnInfo(name = "parent_id") var parentId: Long = 0,
     @ColumnInfo(name = "last_updated") var lastUpdated: Long = 0L,
-    @ColumnInfo(name = "source") var source: String = SOURCE_SIMPLE_CALENDAR,
-    @ColumnInfo(name= "feed_id") var feedId : Long = -1L)
+    @ColumnInfo(name = "source") var source: String = SOURCE_SIMPLE_CALENDAR)
     : Serializable {
 
     companion object {

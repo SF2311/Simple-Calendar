@@ -61,6 +61,8 @@ class SettingsActivity : SimpleActivity() {
         setupLoopReminders()
         setupSnoozeTime()
         setupCaldavSync()
+        setupWebfeedSettings()
+        setubMobileDownload()
         setupManageSyncedCalendars()
         setupDefaultStartTime()
         setupDefaultDuration()
@@ -129,7 +131,7 @@ class SettingsActivity : SimpleActivity() {
     private fun setupSectionColors() {
         val adjustedPrimaryColor = getAdjustedPrimaryColor()
         arrayListOf(reminders_label, caldav_label, weekly_view_label, monthly_view_label, simple_event_list_label, widgets_label, events_label,
-            new_events_label, migrating_label).forEach {
+            new_events_label, migrating_label, webfeed_label).forEach {
             it.setTextColor(adjustedPrimaryColor)
         }
     }
@@ -187,6 +189,20 @@ class SettingsActivity : SimpleActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun setupWebfeedSettings(){
+        settings_webfeed_settings_holder.setOnClickListener {
+            startActivity(Intent(this, WebFeedActivity::class.java))
+        }
+    }
+
+    private fun setubMobileDownload(){
+        settings_webfeed_allow_mobile_download.isChecked = config.allowMobileDownloads
+        settings_webfeed_mobile_holder.setOnClickListener {
+            settings_webfeed_allow_mobile_download.toggle()
+            config.allowMobileDownloads = settings_webfeed_allow_mobile_download.isChecked
         }
     }
 

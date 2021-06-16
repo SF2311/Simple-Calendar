@@ -305,7 +305,7 @@
     </string>
     <string name="webfeed_settings">Webfeed Settings</string>
     <string name="subscribe_webfeed_label">Subscribe to Calendar Webfeed</string>
-    <string name="enter_feed_url">Enter Feed URL</string>
+    <string name="create_feed">Create Feed</string>
     <string name="enter_valid_url">Please enter a valid URL</string>
     <string name="sync_webfeed">Refresh regularly</string>
     <string name="feed_url">Feed URL</string>
@@ -313,6 +313,14 @@
     <string name="edit_webfeeds">Edit Calendar Feeds</string>
     <string name="feed_name">Feed Name</string>
     <string name="new_webfeed">New Feed</string>
+    <string name="sync_webfeeds">Synchronize Webfeeds</string>
+    <string name="keep_old_events">Keep old events after they are deleted from feed</string>
+    <string name="delete_feed_success">Successfully deleted feed</string>
+    <string name="webfeed">Webfeed</string>
+    <string name="no_webfeeds_found">No feeds to display.</string>
+    <string name="allow_mobile_download">Allow feed download over a mobile internet connection</string>
+    <string name="mobile_download_not_allowed">Mobile download is disabled</string>
+    <string name="enter_unique_feed_name">A Feed with this name exists already</string>
 
     <!--
         Haven't found some strings? There's more at

@@ -170,6 +170,9 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(ALLOW_CHANGING_TIME_ZONES, false)
         set(allowChangingTimeZones) = prefs.edit().putBoolean(ALLOW_CHANGING_TIME_ZONES, allowChangingTimeZones).apply()
 
+    var allowMobileDownloads: Boolean
+        get() = prefs.getBoolean(ALLOW_MOBILE_DOWNLOADS, false)
+        set(allowMobileDownloads) = prefs.edit().putBoolean(ALLOW_MOBILE_DOWNLOADS, allowMobileDownloads).apply()
     var lastExportPath: String
         get() = prefs.getString(LAST_EXPORT_PATH, "")!!
         set(lastExportPath) = prefs.edit().putString(LAST_EXPORT_PATH, lastExportPath).apply()
